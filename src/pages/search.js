@@ -1,41 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { makeSearch, addItemCart, modifyItemCart } from '../redux/actions';
+import { makeSearch, setSearchTriggered } from '../redux/actions';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 const Search = () => {
     const search = useSelector( state => state.search);
     const isLoading = useSelector( state => state.isLoading)
     const loadingError = useSelector( state => state.loadingError)
     const cart = useSelector( state => state.cart);
+    const searchTriggered = useSelector( state => state.searchTriggered)
     const dispatch = useDispatch();
-    const [searchTriggered, setSearchTriggered] = useState(false)
-    const [___, setStateToForceReRender] = useState(false);
+    const navigate = useNavigate();
 
     function handleSubmit(e){
         e.preventDefault();
-        searchTriggered === false && setSearchTriggered(true);
+        searchTriggered === false && dispatch(setSearchTriggered());
         if(e.target.id!=="all") dispatch(makeSearch(e.target[0].value))
         else dispatch(makeSearch(null))
     }
 
-    function handleClick(e){
-        const add = e.target.className;
-        const productId = parseInt(e.target.parentElement.id)
-        let productInCart = cart.filter(item => item.id===productId)
-        if(productInCart.length!==0){
-           productInCart = productInCart[0];
-           if(add==="+") dispatch(modifyItemCart(productId,true));
-           else dispatch(modifyItemCart(productId,false))
-        }else{
-            let productInSearch = search.filter(item => item.id===productId);
-            productInSearch = productInSearch[0];
-            dispatch(addItemCart(productInSearch))
-        }
-        setStateToForceReRender(prevState => !prevState)
+    function cleanSearch(e){
+        e.preventDefault();
     }
 
     return(
         <>
+            <Navbar/>
             <div>Buscar Producto</div>
             <form onSubmit={handleSubmit}>
                 <input type="text"/>
@@ -60,9 +51,7 @@ const Search = () => {
                                     <h1>{product.name}</h1>
                                     <p>$ {product.price}</p>
                                     <img style={{width: "30em"}} src={product.image}/>
-                                    <button className='+' onClick={handleClick}>+</button>
-                                    <button className='-' onClick={handleClick}>-</button>
-                                    <div >{units} unidades en el carrito.</div>
+                                    <button onClick={() => navigate(`/product/${product.id}`)}>Ver Producto</button>
                                 </div>
                             )
                         })

@@ -6,6 +6,8 @@ export const ADD_ITEM_CART = "ADD_ITEM_CART";
 export const REMOVE_ITEM_CART = "REMOVE_ITEM_CART";
 export const SET_LOADING_ERROR = "SET_LOADING_ERROR";
 export const MODIFY_ITEM_CART = "MODIFY_ITEM_CART";
+export const SET_CURRENT_PRODUCT = "SET_CURRENT_PRODUCT";
+export const SET_SEARCH_TRIGGERED = "SET_SEARCH_TRIGGERED";
 export const PAY = "PAY";
 
 export const loading = (status) => {
@@ -38,10 +40,10 @@ export const modifyItemCart = (id, sumItem) => {
     }
 }
 
-export const removeItemCart = (product) => {
+export const removeItemCart = (id) => {
     return {
         type: REMOVE_ITEM_CART,
-        product
+        id
     }
 }
 
@@ -49,6 +51,19 @@ export const setLoadingError = (status) => {
     return {
         type: SET_LOADING_ERROR,
         status
+    }
+}
+
+export const setCurrentProduct = (currentProduct) => {
+    return {
+        type: SET_CURRENT_PRODUCT,
+        currentProduct
+    }
+}
+
+export const setSearchTriggered = () => {
+    return {
+        type: SET_SEARCH_TRIGGERED
     }
 }
 
@@ -83,6 +98,31 @@ export const makeSearch = params => async (dispatch, getState) => {
         alert(error);
     }
 }
+
+export const loadProduct = id => async (dispatch, getState) => {
+    dispatch(loading(true));
+    if(id===undefined){
+        setCurrentProduct([]);
+        dispatch(loading(false));
+        return
+    }
+    try{
+        const response = await axios.get(`${getState().path}products?id=${id}`);
+        if(response.statusText==="OK"){
+            dispatch(setCurrentProduct(response.data));
+        }else{
+            dispatch(setCurrentProduct([]))
+            dispatch(setLoadingError(true))
+        }
+        dispatch(loading(false));
+    }catch(error){
+        dispatch(setLoadingError(true))
+        dispatch(setCurrentProduct([]));
+        dispatch(loading(false));
+        alert(error);
+    }
+
+} 
 
 
 
