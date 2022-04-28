@@ -1,5 +1,6 @@
 import { LOADING, SET_SEARCH, ADD_ITEM_CART, REMOVE_ITEM_CART, 
-    PAY, SET_LOADING_ERROR, MODIFY_ITEM_CART, SET_CURRENT_PRODUCT, SET_SEARCH_TRIGGERED} from './actions';
+    PAY, SET_LOADING_ERROR, MODIFY_ITEM_CART, SET_CURRENT_PRODUCT, 
+    SET_SEARCH_TRIGGERED, SET_IS_PRODUCT_IN_CART} from './actions';
 
 const initialState = {
     isLoading:false,
@@ -8,6 +9,7 @@ const initialState = {
     search:[],
     currentProduct:[],
     searchTriggered:false,
+    isProductInCart:false,
     path: "https://fake-json-server-19830208.herokuapp.com/"
 }
 
@@ -18,7 +20,7 @@ export function reducer(state=initialState, action){
         case SET_SEARCH:
             return Object.assign({},state,{search: action.search})
         case ADD_ITEM_CART:
-            let newCart = state.cart;
+            let newCart = new Array(...state.cart);
             newCart.push(action.product);
             newCart[newCart.length-1].quantity = 1;
             return Object.assign({},state,{cart:newCart});
@@ -44,7 +46,9 @@ export function reducer(state=initialState, action){
         case SET_CURRENT_PRODUCT:
             return Object.assign({},state,{currentProduct:action.currentProduct});
         case SET_SEARCH_TRIGGERED:
-            return Object.assign({}, state, {searchTriggered: true})
+            return Object.assign({}, state, {searchTriggered: true});
+        case SET_IS_PRODUCT_IN_CART:
+            return Object.assign({},state,{isProductInCart:action.isProductInCart});
         case PAY:
             return Object.assign({},state,{user:{},cart:[]});
         default:

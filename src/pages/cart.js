@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { addItemCart, modifyItemCart, removeItemCart, pay } from "../redux/actions";
 import Navbar from "../components/Navbar";
+import Container from "../components/Container";
 
 
 const Cart = () => {
@@ -53,34 +54,43 @@ const Cart = () => {
     return(
         <>
             <Navbar/>
-            <h1>Carrito</h1>
-            {
-                cart.length!==0 &&
-                cart.map(product =>{
-                    return( 
-                        <div id={product.id} key={product.id}>
-                            <h2>{product.name}</h2>
-                            <h3>$ {product.price} por unidad.</h3>
-                            <h3>{product.quantity} {product.quantity===1?"unidad":"unidades"}</h3>
-                            <h3>$ {product.price * product.quantity}</h3>
-                            <button className="+" onClick={handleClick}>+</button>
-                            <button className="-" onClick={handleClick}>-</button>
-                            <button onClick={handleRemoveClick}>Quitar Producto</button>
-                        </div>
-                    )
-                })
-            }
-            {
-                cart.length!==0 &&
-                <>
-                    <div>Total: ${total}</div>
-                    <button onClick={handlePayClick}>Pagar</button>
-                </>
-            }
-            {
-                cart.length===0 &&
-                <div>No hay productos seleccionados para comprar.</div>
-            }
+            <Container>
+                <div className="cart-container">
+                {
+                    cart.length!==0 &&
+                    cart.map(product =>{
+                        return( 
+                            <div className="cart-product" id={product.id} key={product.id}>
+                                <h3>{product.name}</h3>
+                                <div className="cart-product-values">
+                                    <div className="column1">
+                                        <div>$ {product.price} x unidad</div>
+                                        <div>x {product.quantity}</div>
+                                    </div>
+                                    <div className="column2">
+                                        <div>$ {product.price * product.quantity}</div>
+                                    </div>
+                                </div>
+                                <button className="+" onClick={handleClick}>+</button>
+                                <button className="-" onClick={handleClick}>-</button>
+                                <button onClick={handleRemoveClick}>Quitar Producto</button>
+                            </div>
+                        )
+                    })
+                }
+                {
+                    cart.length!==0 &&
+                    <div className="cart-total">
+                        <div className="cart-total-sum">Total: ${total}</div>
+                        <button onClick={handlePayClick}>Pagar</button>
+                    </div>
+                }
+                {
+                    cart.length===0 &&
+                    <div className="cart-noproducts">No hay productos seleccionados para comprar.</div>
+                }
+                </div>
+            </Container>
         </>
     );
 }

@@ -8,6 +8,7 @@ export const SET_LOADING_ERROR = "SET_LOADING_ERROR";
 export const MODIFY_ITEM_CART = "MODIFY_ITEM_CART";
 export const SET_CURRENT_PRODUCT = "SET_CURRENT_PRODUCT";
 export const SET_SEARCH_TRIGGERED = "SET_SEARCH_TRIGGERED";
+export const SET_IS_PRODUCT_IN_CART = "SET_IS_PRODUCT_IN_CART";
 export const PAY = "PAY";
 
 export const loading = (status) => {
@@ -64,6 +65,13 @@ export const setCurrentProduct = (currentProduct) => {
 export const setSearchTriggered = () => {
     return {
         type: SET_SEARCH_TRIGGERED
+    }
+}
+
+export const setIsProductInCart = (isProductInCart) => {
+    return {
+        type: SET_IS_PRODUCT_IN_CART,
+        isProductInCart
     }
 }
 

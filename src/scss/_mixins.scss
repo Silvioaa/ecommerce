@@ -1,0 +1,46 @@
+@mixin filledButtonStyles {
+    background-color: $orange-dark;
+    color: $orange-light;
+    border:0;
+    border-radius:1rem;
+    padding:0.25rem 1rem;
+  }
+  
+  @mixin transparentButtonStyles {
+    background-color: transparent;
+    color: $orange-dark;
+    border: 0.05rem solid $orange-dark;
+    border-radius:1rem;
+    padding:0.25rem 1rem;
+  }
+  
+  @mixin cardConfiguration($maxWidth) {
+    border: 0.1rem solid $orange-dark;
+    display:flex;
+    flex-direction:column;
+    align-items: center;
+    width:70%;
+    max-width:$maxWidth;
+    border-radius:1rem;
+    margin-bottom:1rem;
+    margin-right:1rem;
+    padding:1rem;
+    h1{
+      color:$grey-dark;
+    }
+    img{
+      display: inline-block;
+      width:85%;
+      border-radius:1rem;
+    }
+    button{
+      @include filledButtonStyles();
+    }
+    p {
+      margin: 0;
+      margin-bottom:0.5rem;
+      font-size:1.5rem;
+      color:$orange-dark;
+      font-weight:bold;
+    }
+  }
