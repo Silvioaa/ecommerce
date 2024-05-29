@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { loadProduct, addItemCart, setIsProductInCart } from '../redux/actions';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,8 +13,10 @@ const Product = () => {
     const currentProduct = useSelector(state => state.currentProduct);
     const cart = useSelector(state => state.cart);
     const isProductInCart = useSelector(state => state.isProductInCart);
+    const loadingError = useSelector(state => state.loadingError);
+    const path = useSelector(state => state.path);
     const dispatch = useDispatch();
-    if(currentProduct.length===0||currentProduct[0].id!==id) dispatch(loadProduct(id));
+    if((!loadingError&&currentProduct.length===0)||(!loadingError&&currentProduct[0].id!==id)) dispatch(loadProduct(id));
 
     async function handleClick(e){
         e.preventDefault();
@@ -43,13 +45,13 @@ useEffect(()=>{
                 (currentProduct.length!==0 && currentProduct[0].id===id) ?
                 currentProduct.map((product) => 
                     <div className='product-card' key={product.id}>
-                        <h1>{product.name}</h1>
-                        <img src={product.image}/>
-                        <div className='product-card-description'>{product.description}</div>
+                        <h1>{product.productName}</h1>
+                        <img src={`${path}images/${product.productImage}`} alt={product.productName}/>
+                        <div className='product-card-description'>{product.productDescription}</div>
                         { isProductInCart ?
-                            <button id="goToCart" onClick={handleClick}>Ir al Carrito</button>
+                            <button id="goToCart" onClick={handleClick}>Go to Cart</button>
                             :
-                            <button id="add" onClick={handleClick}>Agregar al Carrito</button>
+                            <button id="add" onClick={handleClick}>Add to Cart</button>
                         }
                     </div>
                 )

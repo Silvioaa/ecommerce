@@ -1,6 +1,6 @@
 @import 'variables','mixins','navbar','search','product','cart';
 
-#root{
+body{
   background-color: $orange-light;
   color:$grey-dark;
   box-sizing: border-box;

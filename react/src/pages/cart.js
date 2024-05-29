@@ -39,14 +39,14 @@ const Cart = () => {
     function handlePayClick(e){
         e.preventDefault();
         dispatch(pay());
-        alert("El pago ha sido efectuado, muchas gracias por su compra.")
+        alert("The payment was made successfully. Thank you very much for your purchase.")
         navigate("/search");
     }
 
     useEffect(()=>{
         totalValue = 0;
         if(cart.length!==0){
-            cart.forEach(product => totalValue = totalValue + product.price*product.quantity);
+            cart.forEach(product => totalValue = totalValue + product.productPrice*product.quantity);
         }
         setTotal(totalValue)
     })
@@ -61,19 +61,19 @@ const Cart = () => {
                     cart.map(product =>{
                         return( 
                             <div className="cart-product" id={product.id} key={product.id}>
-                                <h3>{product.name}</h3>
+                                <h3>{product.productName}</h3>
                                 <div className="cart-product-values">
                                     <div className="column1">
-                                        <div>$ {product.price} x unidad</div>
+                                        <div>$ {product.productPrice} x unit</div>
                                         <div>x {product.quantity}</div>
                                     </div>
                                     <div className="column2">
-                                        <div>$ {product.price * product.quantity}</div>
+                                        <div>$ {product.productPrice * product.quantity}</div>
                                     </div>
                                 </div>
                                 <button className="+" onClick={handleClick}>+</button>
                                 <button className="-" onClick={handleClick}>-</button>
-                                <button onClick={handleRemoveClick}>Quitar Producto</button>
+                                <button onClick={handleRemoveClick}>Remove Product</button>
                             </div>
                         )
                     })
@@ -82,12 +82,12 @@ const Cart = () => {
                     cart.length!==0 &&
                     <div className="cart-total">
                         <div className="cart-total-sum">Total: ${total}</div>
-                        <button onClick={handlePayClick}>Pagar</button>
+                        <button onClick={handlePayClick}>Pay</button>
                     </div>
                 }
                 {
                     cart.length===0 &&
-                    <div className="cart-noproducts">No hay productos seleccionados para comprar.</div>
+                    <div className="cart-noproducts">No product was selected.</div>
                 }
                 </div>
             </Container>

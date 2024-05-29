@@ -12,6 +12,7 @@ const Search = () => {
     const loadingError = useSelector( state => state.loadingError)
     const cart = useSelector( state => state.cart);
     const searchTriggered = useSelector( state => state.searchTriggered)
+    const path = useSelector( state => state.path);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -27,10 +28,10 @@ const Search = () => {
             <Navbar/>
             <Container>
                 <form className='search-form' onSubmit={handleSubmit}>
-                    <input type="text" placeholder='Buscar producto'/>
+                    <input type="text" placeholder='Search product'/>
                     <div className='search-buttons'>
-                        <input className='button' type="submit" value="Buscar"/>
-                        <button className='button' id="all" onClick={handleSubmit}>Ver todos</button>
+                        <input className='button' type="submit" value="Search"/>
+                        <button className='button' id="all" onClick={handleSubmit}>See All</button>
                     </div>
                 </form>
                 {
@@ -39,30 +40,23 @@ const Search = () => {
                         {
                             search.length!==0 &&
                             search.map((product)=>{
-                                let units;
-                                cart.forEach((item) =>{ 
-                                    if(item.id===product.id){
-                                        units = item.quantity
-                                    }
-                                });
-                                units = units===undefined?0:units;
                                 return(
-                                    <div className='search-results-card' id={product.id} key={product.name}>
-                                        <img src={product.image}/>
-                                        <h1>{product.name}</h1>
-                                        <p>$ {product.price}</p>
-                                        <button onClick={() => navigate(`/product/${product.id}`)}>Ver Producto</button>
+                                    <div className='search-results-card' id={product.id} key={product.productName}>
+                                        <img src={`${path}images/${product.productImage}`} alt={product.productName}/>
+                                        <h1>{product.productName}</h1>
+                                        <p>$ {product.productPrice}</p>
+                                        <button onClick={() => navigate(`/product/${product.id}`)}>See Product</button>
                                     </div>
                                 )
                             })
                         }
                         {
                             (search.length===0 && loadingError===true) &&
-                            <div>No se ha podido realizar la búsqueda. Ha habido un error.</div>
+                            <div>The search could not be performed. An error occurred.</div>
                         }
                         {    
                             (search.length===0 && loadingError===false) &&
-                            <div>No se han encontrado resultados para la búsqueda.</div>
+                            <div>No results found for this search.</div>
                         }
                     </div>
                 }

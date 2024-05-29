@@ -10,7 +10,7 @@ const initialState = {
     currentProduct:[],
     searchTriggered:false,
     isProductInCart:false,
-    path: "https://fake-json-server-19830208.herokuapp.com/"
+    path: process.env.REACT_APP_API_URL
 }
 
 export function reducer(state=initialState, action){
