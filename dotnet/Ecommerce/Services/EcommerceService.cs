@@ -9,8 +9,8 @@ namespace Ecommerce.Services;
 
 public class EcommerceService
 {
-    private MySqlConnection _connection;
-    public EcommerceService(MySqlConnection connection){
+    private SqlConnection _connection;
+    public EcommerceService(SqlConnection connection){
         _connection = connection;
     }
 
@@ -20,12 +20,12 @@ public class EcommerceService
         try
         {
             string detailString = JsonConvert.SerializeObject(request.PurchaseDetail);
-            MySqlParameter idParam = new MySqlParameter();
+            SqlParameter idParam = new SqlParameter();
             idParam.ParameterName = "Id";
             idParam.Value = 0;
             idParam.DbType = DbType.Int32;
             idParam.Direction = ParameterDirection.Output;
-            using (MySqlCommand command = new MySqlCommand("ecom.Insert_Purchase",_connection))
+            using (SqlCommand command = new SqlCommand("ecom.Insert_Purchase",_connection))
             {
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("TimeOfPurchase", request.TimeOfPurchase);
@@ -56,26 +56,21 @@ public class EcommerceService
 
         try
         {
-            using (MySqlCommand command = new MySqlCommand())
+            using (SqlCommand command = new SqlCommand())
             {
                 command.CommandType = CommandType.StoredProcedure;
                 command.Connection = _connection;
+                command.CommandText = "dbo.Select_Products";
                 if (id != null)
                 {
-                    command.CommandText = "ecom.Select_Products_byId";
-                    command.Parameters.AddWithValue("ProductId", id);
+                    command.Parameters.AddWithValue("Id", id);
                 }
                 else if (name != null)
                 {
-                    command.CommandText = "ecom.Select_Products_byProductName";
-                    command.Parameters.AddWithValue("SearchName", name);
-                }
-                else
-                {
-                    command.CommandText = "ecom.Select_Products";
+                    command.Parameters.AddWithValue("ProductName", name);
                 }
                 _connection.Open();
-                MySqlDataReader reader = command.ExecuteReader();
+                SqlDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     if (products == null)
