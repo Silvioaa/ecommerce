@@ -12,8 +12,8 @@ namespace Ecommerce.Controllers {
     public class EcommerceController : Controller
     {
         private EcommerceService _ecommerceService;
-        public EcommerceController(EcommerceService mySqlProvider){
-            _ecommerceService = mySqlProvider;
+        public EcommerceController(EcommerceService sqlProvider){
+            _ecommerceService = sqlProvider;
         }
 
         [HttpPost]
