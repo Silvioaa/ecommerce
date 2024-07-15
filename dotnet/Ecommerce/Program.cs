@@ -1,11 +1,9 @@
 using Ecommerce.Services;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Data.SqlClient;
 using System.Security.Authentication;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.AspNetCore.HttpOverrides;
-using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +30,7 @@ builder.Services.AddControllers();
 builder.Services.AddTransient<SqlConnection>(_ => 
     new SqlConnection(connectionString != null ? connectionString : "")
 );
+builder.Services.AddSingleton<DatabaseService, DatabaseService>();
 builder.Services.AddSingleton<EcommerceService, EcommerceService>();
 
 var app = builder.Build();

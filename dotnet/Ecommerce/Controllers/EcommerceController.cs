@@ -5,6 +5,7 @@ using Ecommerce.Services;
 using Ecommerce.Models;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
+using System.ComponentModel;
 
 namespace Ecommerce.Controllers {
 
@@ -12,8 +13,8 @@ namespace Ecommerce.Controllers {
     public class EcommerceController : Controller
     {
         private EcommerceService _ecommerceService;
-        public EcommerceController(EcommerceService sqlProvider){
-            _ecommerceService = sqlProvider;
+        public EcommerceController(EcommerceService ecommerceService){
+            _ecommerceService = ecommerceService;
         }
 
         [HttpPost]
