@@ -17,22 +17,6 @@ namespace Ecommerce.Controllers {
         }
 
         [HttpPost]
-        [Route("purchases")]
-        public ActionResult<int?> NewPurchase([FromBody]PurchaseAddRequest purchase)
-        {
-            try
-            {
-                int? result = _ecommerceService.InsertPurchase(purchase);
-                return StatusCode(201, result);
-            }
-            catch (Exception ex)
-            {
-                var jsonEx = JsonConvert.SerializeObject(ex)!;
-                return StatusCode(500, jsonEx);
-            }
-            
-        }
-        [HttpPost]
         [Route("purchasesV2")]
         public ActionResult<int?> NewPurchaseV2([FromBody] PurchaseAddRequestV2 purchase)
         {
@@ -47,25 +31,6 @@ namespace Ecommerce.Controllers {
                 return StatusCode(500, jsonEx);
             }
 
-        }
-
-        [HttpGet]
-        [Route("products")]
-        public ActionResult<List<Product>> Products(int? id, string? name)
-        {
-            List<Product>? products;
-
-            try
-            {
-                products = _ecommerceService.GetProducts(id, name);
-                return StatusCode(200, products);
-            }
-            catch (Exception ex)
-            {
-                var jsonEx = JsonConvert.SerializeObject(ex)!;
-                return StatusCode(500, jsonEx);
-                
-            }
         }
 
         [HttpGet]
