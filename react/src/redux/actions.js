@@ -90,8 +90,8 @@ export const makeSearch = params => async (dispatch, getState) => {
     const firstCapital = params===null ? null : first + rest;
     try{
         const response = params===null ?
-            await axios.get(`${getState().path}api/products`):
-            await axios.get(`${getState().path}api/products?name=${firstCapital}`)
+            await axios.get(`${getState().path}api/productsV2`):
+            await axios.get(`${getState().path}api/productsV2?name=${firstCapital}`)
         console.log(response);
         if(response.status===200){
             dispatch(setSearch(response.data));
@@ -116,7 +116,7 @@ export const loadProduct = id => async (dispatch, getState) => {
         return
     }
     try{
-        const response = await axios.get(`${getState().path}api/products?id=${id}`);
+        const response = await axios.get(`${getState().path}api/productsV2?id=${id}`);
         if(response.status===200){
             dispatch(setCurrentProduct(response.data));
         }else{
