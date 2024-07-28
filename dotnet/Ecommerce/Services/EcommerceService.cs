@@ -13,32 +13,6 @@ public class EcommerceService
         _databaseService = databaseService;
     }
 
-    public int? InsertPurchase(PurchaseAddRequest request)
-    {
-        int? purchaseId = 0;
-
-        if(request.PurchaseDetail.Count == 0)
-        {
-            throw new Exception("The purchase must include at least one product");
-        }
-        
-        string detailString = JsonConvert.SerializeObject(request.PurchaseDetail);
-
-        SqlParameter idParam = CreateIdParam();
-
-        _databaseService.InsertData("dbo.Insert_Purchase", (SqlParameterCollection paramCollection) =>
-        {
-            paramCollection.AddWithValue("TimeOfPurchase", request.TimeOfPurchase);
-            paramCollection.AddWithValue("PurchaseDetail", detailString);
-            paramCollection.AddWithValue("PurchaseTotal", request.PurchaseTotal);
-            paramCollection.Add(idParam);
-        }, (SqlParameterCollection returnedParameters) => {
-            purchaseId = (int?)returnedParameters["Id"].Value;
-        });
-
-        return purchaseId;
-    }
-
     public int? InsertPurchaseV2(PurchaseAddRequestV2 request)
     {
         int? purchaseId = 0;
@@ -64,38 +38,6 @@ public class EcommerceService
         });
         
         return purchaseId;
-    }
-
-    public List<Product>? GetProducts(int? id, string? name)
-    {
-        List<Product>? products = null;
-
-        _databaseService.SelectData("dbo.Select_Products", (SqlParameterCollection collection) => {
-            if (id != null)
-            {
-                collection.AddWithValue("Id", id);
-            }
-            else if (name != null)
-            {
-                collection.AddWithValue("ProductName", name);
-            }
-        }, (IDataReader reader) =>
-        {
-            if (products == null)
-            {
-                products = new List<Product>();
-            }
-            Product product = new Product();
-            int index = 0;
-            product.Id = reader.GetInt32(index++);
-            product.ProductName = reader.GetString(index++);
-            product.ProductImage = reader.GetString(index++);
-            product.ProductDescription = reader.GetString(index++);
-            product.ProductPrice = reader.GetInt32(index++);
-            products.Add(product);
-        });
-
-        return products;
     }
 
     public List<ProductV2>? GetProductsV2(int? id, string? name)
