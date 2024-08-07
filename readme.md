@@ -6,6 +6,10 @@ My name is Silvio Acevedo and I'm a Fullstack Developer. I created this applicat
 
 The web page is published and can be accessed in [https://ecommerce.silvioacevedo.space](https://ecommerce.silvioacevedo.space).
 
+## Application's Project
+
+This application is a work in progress, you can check the past, current and upcoming tasks in it's [github's project](https://github.com/users/Silvioaa/projects/1/views/1).  
+
 ## Installation
 
 To clone this repository, open a bash or cmd terminal and run the following command:
