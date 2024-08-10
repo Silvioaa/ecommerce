@@ -24,9 +24,9 @@ public class EcommerceService
 
         DataTable detail = MapPurchaseItemsToTable(request.PurchaseDetail);
 
-        SqlParameter idParam = CreateIdParam();
+        SqlParameter idParam = CreateOutputParam("Id", DbType.Int32, 0, 5);
 
-        _databaseService.InsertData("dbo.Insert_PurchaseV2", (SqlParameterCollection paramCollection) =>
+        _databaseService.HandleData("dbo.Insert_PurchaseV2", (SqlParameterCollection paramCollection) =>
         {
             paramCollection.AddWithValue("UserId", request.UserId);
             paramCollection.AddWithValue("TimeOfPurchase", request.TimeOfPurchase);
@@ -72,6 +72,76 @@ public class EcommerceService
         return products;
     }
 
+    public object RegisterUser(UserCreateAddRequest user)
+    {
+
+        object responseMessage = "";
+        SqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
+        _databaseService.HandleData(
+        "dbo.Insert_User",
+        (SqlParameterCollection col) => {
+            col.AddWithValue("@UserName", user.UserName);
+            col.AddWithValue("@Password", user.Password);
+            col.AddWithValue("@UserRole", user.UserRole);
+            col.Add(responseMessageParam);
+        }, (SqlParameterCollection returnCol) =>
+        {
+            responseMessage = returnCol["@ResponseMessage"].Value;
+        }
+        );
+        return responseMessage;
+    }
+
+    public UserLoginReturnValue LoginUser(UserLoginAddRequest user)
+    {
+        string responseMessage = string.Empty;
+        string sessionToken = string.Empty;
+        SqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
+        SqlParameter sessionTokenParam = CreateOutputParam("@SessionToken", DbType.String, string.Empty, 4000);
+        _databaseService.HandleData("dbo.Login_User",
+            (SqlParameterCollection col) => {
+                col.AddWithValue("@UserName", user.UserName);
+                col.AddWithValue("@Password", user.Password);
+                col.Add(sessionTokenParam);
+                col.Add(responseMessageParam);
+            },
+            (SqlParameterCollection returncol) =>
+            {
+                responseMessage = returncol["@ResponseMessage"].Value.ToString()!;
+                sessionToken = returncol["@SessionToken"].Value.ToString()!;
+            });
+        return new UserLoginReturnValue() {
+                                                Message = responseMessage,
+                                                SessionToken = sessionToken
+                                          };
+    }
+
+    public string LogoutUser(UserLogoutAddRequest user)
+    {
+        if(user.SessionToken == null || user.SessionToken == string.Empty)
+        {
+            return "No user logged in";
+        }
+        string responseMessage = string.Empty;
+        Guid sessionToken = Guid.Empty; 
+        Guid.TryParse(user.SessionToken, out sessionToken);
+        SqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, string.Empty, 4000);
+        _databaseService.HandleData(
+            "dbo.Logout_User",
+            (SqlParameterCollection col) =>
+            {
+                col.AddWithValue("@UserName", user.UserName);
+                col.AddWithValue("@SessionToken", sessionToken);
+                col.Add(responseMessageParam);
+            },
+            (SqlParameterCollection returnCol) =>
+            {
+                responseMessage = returnCol["@ResponseMessage"].Value.ToString()!;
+            }
+        );
+        return responseMessage;
+    }
+
     public static DataTable MapPurchaseItemsToTable(List<PurchaseItemV2> items)
     {
         DataTable detail = new DataTable();
@@ -92,14 +162,15 @@ public class EcommerceService
         return detail;
     }
 
-    public static SqlParameter CreateIdParam()
+    public static SqlParameter CreateOutputParam(string parameterName, DbType parameterType, object value, int size)
     {
-        SqlParameter idParam = new SqlParameter();
-        idParam.ParameterName = "Id";
-        idParam.Value = 0;
-        idParam.DbType = DbType.Int32;
-        idParam.Direction = ParameterDirection.Output;
-        return idParam;
+        SqlParameter outputParam = new SqlParameter();
+        outputParam.ParameterName = parameterName;
+        outputParam.Value = value;
+        outputParam.DbType = parameterType;
+        outputParam.Direction = ParameterDirection.Output;
+        outputParam.Size = size;
+        return outputParam;
     }
 
 }
