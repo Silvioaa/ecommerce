@@ -45,7 +45,7 @@ namespace Ecommerce.Services
 
         }
 
-        public void InsertData(string procName, ParameterMapper parameterMapper, ParameterMapper returnedParametersMapper)
+        public void HandleData(string procName, ParameterMapper parameterMapper, ParameterMapper returnedParametersMapper)
         {
             try
             {
