@@ -12,8 +12,11 @@ namespace Ecommerce.Controllers {
     public class EcommerceController : Controller
     {
         private EcommerceService _ecommerceService;
-        public EcommerceController(EcommerceService ecommerceService){
+        private IHttpContextAccessor _httpContextAccessor;
+        public EcommerceController(EcommerceService ecommerceService, IHttpContextAccessor httpContextAccessor)
+        {
             _ecommerceService = ecommerceService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost]
@@ -54,96 +57,120 @@ namespace Ecommerce.Controllers {
 
         [HttpPost]
         [Route("register")]
-        public ActionResult<object> Register([FromBody] UserCreateAddRequest user)
+        public ActionResult<ResponseObject> Register([FromBody] UserCreateAddRequest user)
         {
+            ResponseObject response = new ResponseObject();
             try
             {
-                object responseMessage = _ecommerceService.RegisterUser(user);
+                string responseMessage = _ecommerceService.RegisterUser(user);
                 if (responseMessage.ToString() == "Success")
                 {
-                    return StatusCode(201, new { Message = "User created successfully." });
+                    response.Message = "User created successfully";
+                    response.IsSuccess = true;
+                    return StatusCode(201, response);
                 }
                 else
                 {
-                    return StatusCode(400, new { Message =  responseMessage });
+                    response.Message = responseMessage;
+                    response.IsSuccess = false;
+                    return StatusCode(400, response);
                 }
             }
             catch (Exception ex)
             {
-                var jsonEx = JsonConvert.SerializeObject(ex)!;
-                return StatusCode(500, jsonEx);
+                response.Message = ex.Message;
+                response.IsSuccess = false;
+                return StatusCode(500, response);
             }
         }
 
         [HttpPost]
         [Route("login")]
-        public ActionResult<object> Login([FromBody] UserLoginAddRequest user)
+        public ActionResult<ResponseObject> Login([FromBody] UserLoginAddRequest user)
         {
+            int status = 200;
+            ResponseObject response = new ResponseObject() { IsSuccess = true };
+            string key = "SessionToken";
             try
-            {
-                int status = 200;
+            {  
+                Response.Cookies.Delete(key);
                 UserLoginReturnValue loginResult = _ecommerceService.LoginUser(user);
                 if (loginResult.Message == "Success")
                 {
-                    return StatusCode(status, loginResult);
+                    
+                    string value = loginResult.SessionToken!;
+                    CookieOptions cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTime.Now.AddDays(1),
+                        HttpOnly = true
+                        //Secure = true
+                    };
+                    Response.Cookies.Append(key, value, cookieOptions);
                 }
                 else if (loginResult.Message == "User does not exist")
                 {
+                    response.IsSuccess = false;
                     status = 404;
                 }
                 else if (loginResult.Message == "Incorrect password")
                 {
+                    response.IsSuccess = false;
                     status = 400;
                 }
-                else if(loginResult.Message == "User already logged in")
-                {
-                    status = 200;
-                }
+                else if (loginResult.Message == "User already logged in") { }
                 else
                 {
                     throw new Exception("Result of login attempt unknown");
                 }
-                return StatusCode(status, new { Message = loginResult.Message });
+                response.Message = loginResult.Message;
+                return StatusCode(status, response);
             }
             catch (Exception ex)
             {
-                var jsonEx = JsonConvert.SerializeObject(ex)!;
-                return StatusCode(500, jsonEx);
+                Response.Cookies.Delete(key);
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                status = 500;
+                return StatusCode(status, response);
             }
         }
 
         [HttpPost]
         [Route("logout")]
-        public ActionResult<object> Logout([FromBody] UserLogoutAddRequest user)
+        public ActionResult<ResponseObject> Logout()
         {
+            ResponseObject response = new ResponseObject() { IsSuccess = true };
             try
             {
-                string logoutStatus = _ecommerceService.LogoutUser(user);
+                string sessionToken = _httpContextAccessor.HttpContext!.Request.Cookies["SessionToken"]!;
+                if (sessionToken == null || sessionToken == string.Empty)
+                {
+                    throw new Exception("No session token provided");
+                }
+                string logoutStatus = _ecommerceService.LogoutUser(sessionToken);
                 int status;
                 if (logoutStatus == "Success")
                 {
                     status = 200;
                 }
-                else if (logoutStatus == "The user does not exist")
-                {
-                    status = 404;
-                }
                 else if (logoutStatus == "Token mismatch" ||
-                         logoutStatus == "No user logged in" ||
-                         logoutStatus == "Token not provided or invalid")
+                         logoutStatus == "Invalid token")
                 {
+                    response.IsSuccess = false;
                     status = 400;
                 }
                 else
                 {
                     throw new Exception("Result of logout attempt unknown");    
                 }
-                return StatusCode(status, new { Message = logoutStatus });
+                response.Message = logoutStatus;
+                return StatusCode(status, response);
             }
             catch (Exception ex)
             {
-                var jsonEx = JsonConvert.SerializeObject(ex)!;
-                return StatusCode(500, jsonEx);
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return StatusCode(500, response);
             }
         }
     }
