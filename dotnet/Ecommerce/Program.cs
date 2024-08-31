@@ -4,6 +4,9 @@ using System.Security.Authentication;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Ecommerce.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +29,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:3000");
     });
 });
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddTransient<SqlConnection>(_ => 
     new SqlConnection(connectionString != null ? connectionString : "")
@@ -38,17 +42,13 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.UseForwardedHeaders(new ForwardedHeadersOptions
-    {
-        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-    });
 }
-else
-{
     app.UseForwardedHeaders(new ForwardedHeadersOptions
     {
         ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
     });
+if (!app.Environment.IsDevelopment())
+{
     app.UseHsts();
 }
 
@@ -58,13 +58,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-//if (app.Environment.IsDevelopment())
-//{
-    app.UseCors();
-//}
+app.UseCors();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseMiddleware<CookieCleanerMiddleware>();
 
 app.Run();

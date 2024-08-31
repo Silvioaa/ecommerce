@@ -72,10 +72,10 @@ public class EcommerceService
         return products;
     }
 
-    public object RegisterUser(UserCreateAddRequest user)
+    public string RegisterUser(UserCreateAddRequest user)
     {
 
-        object responseMessage = "";
+        string responseMessage = "";
         SqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
         _databaseService.HandleData(
         "dbo.Insert_User",
@@ -86,7 +86,8 @@ public class EcommerceService
             col.Add(responseMessageParam);
         }, (SqlParameterCollection returnCol) =>
         {
-            responseMessage = returnCol["@ResponseMessage"].Value;
+            object responseParameter = returnCol["@ResponseMessage"].Value;
+            responseMessage = responseParameter.ToString() ?? "";
         }
         );
         return responseMessage;
@@ -116,21 +117,16 @@ public class EcommerceService
                                           };
     }
 
-    public string LogoutUser(UserLogoutAddRequest user)
+    public string LogoutUser(string stringSessionToken)
     {
-        if(user.SessionToken == null || user.SessionToken == string.Empty)
-        {
-            return "No user logged in";
-        }
         string responseMessage = string.Empty;
         Guid sessionToken = Guid.Empty; 
-        Guid.TryParse(user.SessionToken, out sessionToken);
+        Guid.TryParse(stringSessionToken, out sessionToken);
         SqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, string.Empty, 4000);
         _databaseService.HandleData(
             "dbo.Logout_User",
             (SqlParameterCollection col) =>
             {
-                col.AddWithValue("@UserName", user.UserName);
                 col.AddWithValue("@SessionToken", sessionToken);
                 col.Add(responseMessageParam);
             },
