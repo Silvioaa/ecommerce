@@ -1,5 +1,5 @@
 using Ecommerce.Services;
-using Microsoft.Data.SqlClient;
+using MySqlConnector;
 using System.Security.Authentication;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
@@ -31,8 +31,8 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
-builder.Services.AddTransient<SqlConnection>(_ => 
-    new SqlConnection(connectionString != null ? connectionString : "")
+builder.Services.AddTransient<MySqlConnection>(_ => 
+    new MySqlConnection(connectionString != null ? connectionString : "")
 );
 builder.Services.AddSingleton<DatabaseService, DatabaseService>();
 builder.Services.AddSingleton<EcommerceService, EcommerceService>();
