@@ -2,6 +2,7 @@ using System.Data;
 using Ecommerce.Models;
 using Newtonsoft.Json;
 using Microsoft.Data.SqlClient;
+using MySqlConnector;
 
 namespace Ecommerce.Services;
 
@@ -22,18 +23,18 @@ public class EcommerceService
             throw new Exception("The purchase must include at least one product");
         }
 
-        DataTable detail = MapPurchaseItemsToTable(request.PurchaseDetail);
+        string detail = JsonConvert.SerializeObject(request.PurchaseDetail);
 
-        SqlParameter idParam = CreateOutputParam("Id", DbType.Int32, 0, 5);
+        MySqlParameter idParam = CreateOutputParam("Id", DbType.Int32, 0, 5);
 
-        _databaseService.HandleData("dbo.Insert_PurchaseV2", (SqlParameterCollection paramCollection) =>
+        _databaseService.HandleData("ecom.Insert_Purchase", (MySqlParameterCollection paramCollection) =>
         {
             paramCollection.AddWithValue("UserId", request.UserId);
             paramCollection.AddWithValue("TimeOfPurchase", request.TimeOfPurchase);
             paramCollection.AddWithValue("PurchaseDetail", detail);
             paramCollection.AddWithValue("PurchaseTotal", request.PurchaseTotal);
             paramCollection.Add(idParam);
-        }, (SqlParameterCollection returnedParameters) => {
+        }, (MySqlParameterCollection returnedParameters) => {
             purchaseId = (int?)returnedParameters["Id"].Value;
         });
         
@@ -44,14 +45,22 @@ public class EcommerceService
     {
         List<ProductV2>? products = null;
 
-        _databaseService.SelectData("dbo.Select_ProductsV2", (SqlParameterCollection collection) => {
+        _databaseService.SelectData("ecom.Select_Products", (MySqlParameterCollection collection) => {
             if (id != null)
             {
                 collection.AddWithValue("Id", id);
             }
-            else if (name != null)
+            else
+            {
+                collection.AddWithValue("Id", null);
+            }
+            if (name != null)
             {
                 collection.AddWithValue("ProductName", name);
+            }
+            else
+            {
+                collection.AddWithValue("ProductName", null);
             }
         }, (IDataReader reader) =>
         {
@@ -76,18 +85,18 @@ public class EcommerceService
     {
 
         string responseMessage = "";
-        SqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
+        MySqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
         _databaseService.HandleData(
         "dbo.Insert_User",
-        (SqlParameterCollection col) => {
+        (MySqlParameterCollection col) => {
             col.AddWithValue("@UserName", user.UserName);
             col.AddWithValue("@Password", user.Password);
             col.AddWithValue("@UserRole", user.UserRole);
             col.Add(responseMessageParam);
-        }, (SqlParameterCollection returnCol) =>
+        }, (MySqlParameterCollection returnCol) =>
         {
-            object responseParameter = returnCol["@ResponseMessage"].Value;
-            responseMessage = responseParameter.ToString() ?? "";
+            object responseParameter = returnCol["@ResponseMessage"].Value!;
+            responseMessage = responseParameter?.ToString() ?? "";
         }
         );
         return responseMessage;
@@ -97,18 +106,18 @@ public class EcommerceService
     {
         string responseMessage = string.Empty;
         string sessionToken = string.Empty;
-        SqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
-        SqlParameter sessionTokenParam = CreateOutputParam("@SessionToken", DbType.String, string.Empty, 4000);
+        MySqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
+        MySqlParameter sessionTokenParam = CreateOutputParam("@SessionToken", DbType.String, string.Empty, 4000);
         _databaseService.HandleData("dbo.Login_User",
-            (SqlParameterCollection col) => {
+            (MySqlParameterCollection col) => {
                 col.AddWithValue("@UserName", user.UserName);
                 col.AddWithValue("@Password", user.Password);
                 col.Add(sessionTokenParam);
                 col.Add(responseMessageParam);
             },
-            (SqlParameterCollection returncol) =>
+            (MySqlParameterCollection returncol) =>
             {
-                responseMessage = returncol["@ResponseMessage"].Value.ToString()!;
+                responseMessage = returncol["@ResponseMessage"].Value!.ToString()!;
                 sessionToken = returncol["@SessionToken"].Value.ToString()!;
             });
         return new UserLoginReturnValue() {
@@ -122,15 +131,15 @@ public class EcommerceService
         string responseMessage = string.Empty;
         Guid sessionToken = Guid.Empty; 
         Guid.TryParse(stringSessionToken, out sessionToken);
-        SqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, string.Empty, 4000);
+        MySqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, string.Empty, 4000);
         _databaseService.HandleData(
             "dbo.Logout_User",
-            (SqlParameterCollection col) =>
+            (MySqlParameterCollection col) =>
             {
                 col.AddWithValue("@SessionToken", sessionToken);
                 col.Add(responseMessageParam);
             },
-            (SqlParameterCollection returnCol) =>
+            (MySqlParameterCollection returnCol) =>
             {
                 responseMessage = returnCol["@ResponseMessage"].Value.ToString()!;
             }
@@ -138,29 +147,9 @@ public class EcommerceService
         return responseMessage;
     }
 
-    public static DataTable MapPurchaseItemsToTable(List<PurchaseItemV2> items)
+    public static MySqlParameter CreateOutputParam(string parameterName, DbType parameterType, object value, int size)
     {
-        DataTable detail = new DataTable();
-        detail.Columns.Add("ProductId", typeof(int));
-        detail.Columns.Add("Amount", typeof(int));
-        detail.Columns.Add("Price", typeof(double));
-
-        foreach (PurchaseItemV2 item in items)
-        {
-            DataRow row = detail.NewRow();
-            int index = 0;
-            row[index++] = item.ProductId;
-            row[index++] = item.Amount;
-            row[index++] = item.Price;
-            detail.Rows.Add(row);
-        }
-
-        return detail;
-    }
-
-    public static SqlParameter CreateOutputParam(string parameterName, DbType parameterType, object value, int size)
-    {
-        SqlParameter outputParam = new SqlParameter();
+        MySqlParameter outputParam = new MySqlParameter();
         outputParam.ParameterName = parameterName;
         outputParam.Value = value;
         outputParam.DbType = parameterType;

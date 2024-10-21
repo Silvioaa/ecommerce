@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Diagnostics;
 using Microsoft.Data.SqlClient;
+using MySqlConnector;
 using System.ComponentModel;
 using System.Data;
 
@@ -7,12 +8,12 @@ namespace Ecommerce.Services
 {
     public class DatabaseService
     {
-        private SqlConnection _connection;
-        public DatabaseService(SqlConnection connection) {
+        private MySqlConnection _connection;
+        public DatabaseService(MySqlConnection connection) {
             _connection = connection;
         }
 
-        public delegate void ParameterMapper(SqlParameterCollection paramCol);
+        public delegate void ParameterMapper(MySqlParameterCollection paramCol);
         public delegate void MapSingleRecord(IDataReader reader);
 
         public void SelectData(string procName, ParameterMapper parameterMapper, MapSingleRecord recordMapper)
@@ -20,14 +21,14 @@ namespace Ecommerce.Services
 
             try
             {
-                using (SqlCommand command = new SqlCommand())
+                using (MySqlCommand command = new MySqlCommand())
                 {
                     command.CommandType = CommandType.StoredProcedure;
                     command.Connection = _connection;
                     command.CommandText = procName;
                     parameterMapper(command.Parameters);
                     _connection.Open();
-                    SqlDataReader reader = command.ExecuteReader();
+                    MySqlDataReader reader = command.ExecuteReader();
                     while (reader.Read())
                     {
                         recordMapper(reader);
@@ -49,7 +50,7 @@ namespace Ecommerce.Services
         {
             try
             {
-                using (SqlCommand command = new SqlCommand())
+                using (MySqlCommand command = new MySqlCommand())
                 {
                     command.CommandType = CommandType.StoredProcedure;
                     command.Connection = _connection;
