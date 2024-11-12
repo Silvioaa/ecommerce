@@ -121,7 +121,7 @@ namespace Ecommerce.Controllers {
                 }
                 else
                 {
-                    throw new Exception("Result of login attempt:" + loginResult.Message);
+                    throw new Exception("Result of login attempt unknown");
                 }
                 response.Message = loginResult.Message;
                 return StatusCode(status, response);
