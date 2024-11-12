@@ -3,6 +3,7 @@ using Ecommerce.Models;
 using Newtonsoft.Json;
 using Microsoft.Data.SqlClient;
 using MySqlConnector;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Ecommerce.Services;
 
@@ -87,7 +88,7 @@ public class EcommerceService
         string responseMessage = "";
         MySqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
         _databaseService.HandleData(
-        "dbo.Insert_User",
+        "ecom.Insert_User",
         (MySqlParameterCollection col) => {
             col.AddWithValue("@UserName", user.UserName);
             col.AddWithValue("@Password", user.Password);
@@ -105,10 +106,10 @@ public class EcommerceService
     public UserLoginReturnValue LoginUser(UserLoginAddRequest user)
     {
         string responseMessage = string.Empty;
-        string sessionToken = string.Empty;
+        string sessionToken = user.SessionToken!;
         MySqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, "", 4000);
-        MySqlParameter sessionTokenParam = CreateOutputParam("@SessionToken", DbType.String, string.Empty, 4000);
-        _databaseService.HandleData("dbo.Login_User",
+        MySqlParameter sessionTokenParam = CreateOutputParam("@SessionToken", DbType.String, user.SessionToken!, 4000, false);
+        _databaseService.HandleData("ecom.Login_User",
             (MySqlParameterCollection col) => {
                 col.AddWithValue("@UserName", user.UserName);
                 col.AddWithValue("@Password", user.Password);
@@ -126,14 +127,12 @@ public class EcommerceService
                                           };
     }
 
-    public string LogoutUser(string stringSessionToken)
+    public string LogoutUser(string sessionToken)
     {
         string responseMessage = string.Empty;
-        Guid sessionToken = Guid.Empty; 
-        Guid.TryParse(stringSessionToken, out sessionToken);
         MySqlParameter responseMessageParam = CreateOutputParam("@ResponseMessage", DbType.String, string.Empty, 4000);
         _databaseService.HandleData(
-            "dbo.Logout_User",
+            "ecom.Logout_User",
             (MySqlParameterCollection col) =>
             {
                 col.AddWithValue("@SessionToken", sessionToken);
@@ -147,13 +146,13 @@ public class EcommerceService
         return responseMessage;
     }
 
-    public static MySqlParameter CreateOutputParam(string parameterName, DbType parameterType, object value, int size)
+    public static MySqlParameter CreateOutputParam(string parameterName, DbType parameterType, object value, int size, bool outParameter = true)
     {
         MySqlParameter outputParam = new MySqlParameter();
         outputParam.ParameterName = parameterName;
         outputParam.Value = value;
         outputParam.DbType = parameterType;
-        outputParam.Direction = ParameterDirection.Output;
+        outputParam.Direction = outParameter ? ParameterDirection.Output : ParameterDirection.InputOutput;
         outputParam.Size = size;
         return outputParam;
     }
