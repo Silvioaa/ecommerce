@@ -94,17 +94,14 @@ namespace Ecommerce.Controllers {
             try
             {  
                 Response.Cookies.Delete(key);
+                string token = Request.Cookies[key] ?? "";
+                user.SessionToken = token;
                 UserLoginReturnValue loginResult = _ecommerceService.LoginUser(user);
                 if (loginResult.Message == "Success")
                 {
                     
                     string value = loginResult.SessionToken!;
-                    CookieOptions cookieOptions = new CookieOptions
-                    {
-                        Expires = DateTime.Now.AddDays(1),
-                        HttpOnly = true
-                        //Secure = true
-                    };
+                    CookieOptions cookieOptions = GetCookieOptions();
                     Response.Cookies.Append(key, value, cookieOptions);
                 }
                 else if (loginResult.Message == "User does not exist")
@@ -117,7 +114,11 @@ namespace Ecommerce.Controllers {
                     response.IsSuccess = false;
                     status = 400;
                 }
-                else if (loginResult.Message == "User already logged in") { }
+                else if (loginResult.Message == "User already logged in") {
+                    string value = loginResult.SessionToken!;
+                    CookieOptions cookieOptions = GetCookieOptions();
+                    Response.Cookies.Append(key, value, cookieOptions);
+                }
                 else
                 {
                     throw new Exception("Result of login attempt unknown");
@@ -172,6 +173,16 @@ namespace Ecommerce.Controllers {
                 response.Message = ex.Message;
                 return StatusCode(500, response);
             }
+        }
+
+        static CookieOptions GetCookieOptions()
+        {
+            return new CookieOptions
+            {
+                Expires = DateTime.Now.AddDays(1),
+                HttpOnly = true
+                //Secure = true
+            };
         }
     }
 }

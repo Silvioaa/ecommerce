@@ -62,14 +62,22 @@ CREATE TABLE `purchases` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `purchases`
+-- Table structure for table `users`
 --
 
-LOCK TABLES `purchases` WRITE;
-/*!40000 ALTER TABLE `purchases` DISABLE KEYS */;
-INSERT INTO `purchases` VALUES (2,5,'2024-04-13 19:05:55','[{\"Price\": 10.55, \"Amount\": 1, \"ProductId\": 5}, {\"Price\": 4.32, \"Amount\": 2, \"ProductId\": 2}]',18.8700008392334),(3,5,'2024-04-13 19:05:55','[{\"Price\": 10.55, \"Amount\": 1, \"ProductId\": 5}, {\"Price\": 4.32, \"Amount\": 2, \"ProductId\": 2}]',18.8700008392334),(4,5,'2024-04-13 19:05:55','[{\"Price\": 10.55, \"Amount\": 1, \"ProductId\": 5}, {\"Price\": 4.32, \"Amount\": 2, \"ProductId\": 2}]',18.8700008392334);
-/*!40000 ALTER TABLE `purchases` ENABLE KEYS */;
-UNLOCK TABLES;
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `Name` varchar(50) NOT NULL,
+  `PasswordHash` binary(128) NOT NULL,
+  `UserRole` int NOT NULL,
+  `Salt` varchar(128) NOT NULL,
+  `TokenOfSession` varchar(36) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping routines for database 'ecom'
@@ -107,6 +115,124 @@ BEGIN
                                );
 	
     SET Id = LAST_INSERT_ID();
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `Insert_User` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Insert_User`(
+								IN UserName VARCHAR(50)
+								,IN `Password` VARCHAR(50)
+                                ,IN UserRole INT
+                                ,OUT ResponseMessage MEDIUMTEXT)
+BEGIN
+	IF (SELECT Name FROM ecom.users WHERE Name = UserName LIMIT 1) IS NOT NULL THEN
+		SET ResponseMessage = 'User name already exists';
+    ELSE
+		SET @Salt = UUID();
+        SET @PasswordHash = SHA2(CONCAT(`Password`,@Salt),512);
+        INSERT INTO ecom.users (
+								Name
+                                ,PasswordHash
+                                ,UserRole
+                                ,Salt
+                                )
+                                VALUES
+                                (
+								 UserName
+                                 ,@PasswordHash
+                                 ,UserRole
+                                 ,@Salt
+                                 );
+		SET ResponseMessage = 'Success';
+        
+    END IF;
+    
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `Login_User` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Login_User`(IN UserName VARCHAR(50)
+							   ,IN `Password` VARCHAR(50)
+                               ,OUT ResponseMessage TINYTEXT
+                               ,INOUT SessionToken VARCHAR(36))
+BEGIN
+	IF (SELECT `Name` FROM ecom.users WHERE `Name` = UserName LIMIT 1) IS NOT NULL THEN
+		SET @Salt = (SELECT Salt FROM ecom.users WHERE `Name` = UserName);
+        SET @PasswordHash = SHA2(CONCAT(`Password`, @Salt),512);
+        IF @PasswordHash = (SELECT PasswordHash FROM ecom.users WHERE `Name` = UserName) THEN
+			SET @OriginalSessionToken = (SELECT TokenOfSession FROM ecom.users WHERE `Name` = UserName);
+            IF @OriginalSessionToken IS NULL OR SessionToken IS NULL OR @OriginalSessionToken != SessionToken THEN
+                SET @SessionToken = UUID();
+                SET @Id = (SELECT Id FROM ecom.users WHERE `Name` = UserName);
+                UPDATE ecom.users SET TokenOfSession = @SessionToken WHERE Id = @Id;
+                SET SessionToken = @SessionToken;
+                SET ResponseMessage  = 'Success';
+            ELSE
+				SET ResponseMessage = 'User already logged in';
+            END IF;
+        ELSE
+			SET ResponseMessage = 'Incorrect password';
+        END IF;
+	ELSE 
+		SET ResponseMessage = 'User does not exist';
+    END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `Logout_User` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Logout_User`(
+								OUT ResponseMessage TINYTEXT
+                                ,IN SessionToken VARCHAR(36)
+							   )
+BEGIN
+	IF SessionToken IS NOT NULL AND IS_UUID(SessionToken) THEN
+			IF (SELECT 1 FROM ecom.users WHERE TokenOfSession = SessionToken) IS NOT NULL THEN
+				SET @Id = (SELECT Id FROM ecom.users WHERE TokenOfSession = SessionToken);
+				UPDATE ecom.users SET TokenOfSession = NULL WHERE Id = @Id;
+                SET ResponseMessage = "Success";
+            ELSE
+				SET ResponseMessage = "Token mismatch";
+            END IF;
+	ELSE
+		SET ResponseMessage = "Invalid token";
+	END IF;
+
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -161,4 +287,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-10-17 16:47:08
+-- Dump completed on 2024-11-11 22:45:21
